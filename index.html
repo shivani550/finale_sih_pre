@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>AI-Driven Timetable Generator</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display&display=swap" rel="stylesheet"/>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+
+body {
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #FFE5F1 0%, #F042FF 50%, #160078 100%);
+  color: #1d0039;
+  margin: 0;
+}
+
+nav {
+  background: linear-gradient(90deg, #7226FF 0%, #160078 100%);
+  box-shadow: 0 3px 16px #16007866;
+  border-bottom: 2px solid #F042FF;
+  display: flex;
+  justify-content: center;
+  gap: 1.6rem;
+  padding: 1rem 0;
+}
+
+nav button {
+  border: none;
+  background: transparent;
+  color: #FFE5F1;
+  font-weight: 700;
+  font-size: 1.13rem;
+  padding: 0.75em 2.2em;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+nav button.active, nav button:hover {
+  background: linear-gradient(90deg, #F042FF 20%, #7226FF 80%);
+  color: #fff;
+  box-shadow: 0 5px 24px #F042FF55;
+  transform: scale(1.08);
+}
+
+main {
+  max-width: 950px;
+  margin: 2.8rem auto 6rem auto;
+  background: rgba(255, 229, 241, 0.95);
+  border-radius: 32px;
+  padding: 2.8rem 3rem 2.2rem 3rem;
+  box-shadow: 0 12px 60px #7226FF42;
+  min-height: 600px;
+}
+
+h1, h2, h3 {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 800;
+  color: #7226FF;
+  text-shadow: 0 2px 12px #F042FF33;
+}
+
+h1 {
+  font-size: 2.7rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+form,
+fieldset {
+  background: linear-gradient(135deg, #FFE5F1 0%, #7226FF 100%);
+  border-radius: 20px;
+  border: 2px solid #F042FF;
+  box-shadow: 0 2px 12px #F042FF33;
+  padding: 1.2rem 1.8rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  color: #7226FF;
+}
+
+input[type="text"],
+input[type="password"],
+select,
+textarea {
+  width: 100%;
+  font-size: 1.13rem;
+  background: #FFE5F1;
+  color: #160078;
+  border: 1.5px solid #7226FF;
+  box-shadow: 0 2px 10px #F042FF44;
+  border-radius: 14px;
+  padding: 0.7em 1.1em;
+  margin-top: 0.3rem;
+  font-family: 'Poppins', sans-serif;
+  transition: border 0.26s, box-shadow 0.26s;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: #F042FF;
+  box-shadow: 0 0 8px 1px #F042FF88;
+  outline: none;
+}
+
+button[type="submit"],
+.login-btn, 
+button#btn-export-csv, button#btn-export-pdf,
+nav#reports-tabs button, .approval-btn,
+#reports-generate-btn, #reports-export-csv, #analytics-generate-btn {
+  background: linear-gradient(90deg, #F042FF 10%, #7226FF 75%, #160078 100%);
+  color: #fff;
+  font-weight: 700;
+  border: none;
+  border-radius: 28px;
+  font-size: 1.22rem;
+  padding: 0.92rem 2.1rem;
+  cursor: pointer;
+  box-shadow: 0 6px 25px #7226FF44;
+  margin: 0.5rem 0.6rem 1.2rem 0;
+  transition: background 0.21s;
+}
+
+button[type="submit"]:hover,
+.login-btn:hover,
+button#btn-export-csv:hover, button#btn-export-pdf:hover,
+nav#reports-tabs button:hover, .approval-btn:hover,
+#reports-generate-btn:hover, #reports-export-csv:hover, #analytics-generate-btn:hover {
+  background: linear-gradient(90deg, #7226FF 30%, #F042FF 100%);
+}
+
+.tt-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.7rem;
+  font-size: 1.14rem;
+  box-shadow: 0 3px 24px #7226FF22;
+}
+
+.tt-table th, .tt-table td {
+  padding: 1.18em 0.85em 1.02em 0.85em;
+  background: linear-gradient(90deg, #FFE5F1 0%, #F042FF 80%);
+  color: #160078;
+  border-radius: 19px;
+  box-shadow: 0 2px 7px #7226FF21;
+  text-align: center;
+}
+
+.tt-table th {
+  background: linear-gradient(120deg, #F042FF 15%, #7226FF 85%);
+  color: #fff;
+  font-weight: 900;
+}
+
+.tt-section {
+  background: linear-gradient(135deg, #7226FF 10%, #F042FF 95%);
+  color: #fff;
+  text-shadow: 0 2px 16px #16007833;
+  margin-top: 2.3rem;
+  border-radius: 20px 20px 0 0;
+  font-size: 1.45rem;
+  font-weight: 900;
+  padding: 1.18rem 1.26rem;
+  box-shadow: 0 7px 33px #16007833;
+}
+
+.cr-highlight {
+  background: linear-gradient(90deg, #F042FF 0%, #7226FF 100%);
+  border: 3px solid #160078;
+  border-radius: 13px;
+  padding: 0.42rem;
+  color: #fff;
+  font-weight: 900;
+  display: inline-block;
+  margin-bottom: 1rem;
+}
+
+@media screen and (max-width: 760px) {
+  body { font-size:15px; }
+  nav button { padding: 0.65rem 1.2rem; font-size: 1rem;}
+  .tt-table { font-size: 0.95rem; min-width: 420px;}
+  main { padding: 1.5rem;}
+}
+
+@media screen and (max-width: 400px) {
+  main { padding: 1rem; margin: 1rem;}
+  nav { flex-direction: column; gap: 1rem; padding: 1rem;}
+  nav button { width: 100%; }
+}
+
+</style>
+</head>
+<body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<nav>
+  <button id="tab-admin" class="active">Admin</button>
+  <button id="tab-faculty">Faculty</button>
+  <button id="tab-student">Student</button>
+  <button id="tab-reports">Reports & Analytics</button>
+  <button id="tab-analytics">Analytics Dashboard</button>
+  <!-- <button id="tab-approval">Timetable Approval</button> -->
+</nav>
+
+<main>
+  <!-- Admin Section -->
+  <section id="admin-view" class="active-section">
+    <h1>Admin - Create Timetable</h1>
+    <form id="timetable-form">
+      <fieldset>
+        <label>Year:
+          <input id="input-year" placeholder="e.g. 2025" type="text" />
+        </label>
+        <label>Branch:
+          <select id="branch-select">
+            <option value="CSE">CSE</option>
+            <option value="MAE">MAE</option>
+            <option value="IT">IT</option>
+            <option value="ECE">ECE</option>
+          </select>
+        </label>
+        <label>Sections (comma separated):<br/>
+          <input id="input-sections" placeholder="A,B"/>
+        </label>
+        <label>Assign CR per section (comma separated, match sections order):<br/>
+          <input id="input-crs" placeholder="CR-A,CR-B"/>
+        </label>
+        <label>Subjects & Faculties (one per line, format=subject,faculty):<br/>
+          <textarea id="input-subjects" rows="4" placeholder="Data Structures,Dr. Sharma\nOperating Systems,Dr. Gupta"></textarea>
+        </label>
+        <label>Rooms (comma separated):<br/>
+          <input id="input-rooms" placeholder="201,202,203"/>
+        </label>
+        <label>Periods (comma separated):<br/>
+          <input id="input-periods" placeholder="09:00-10:00,10:00-11:00"/>
+        </label>
+        <label>Days (comma separated):<br/>
+          <input id="input-days" placeholder="Monday,Tuesday,Wednesday,Thursday,Friday"/>
+        </label>
+      </fieldset>
+      <button type="submit">Generate Timetable</button>
+    </form>
+    <div id="timetable-container"></div>
+    <button id="btn-export-csv" style="display:none;">Export CSV</button>
+    <button id="btn-export-pdf" style="display:none;">Export PDF</button>
+  </section>
+
+  <!-- Faculty Section -->
+  <section id="faculty-view" style="display:none;">
+    <h1>Faculty Dashboard Login</h1>
+    <form id="faculty-login-form">
+      <label>
+        Faculty Name: <input id="faculty-login-name" required />
+      </label>
+      <button type="submit">Login</button>
+    </form>
+    <div id="faculty-timetable-container"></div>
+  </section>
+
+  <!-- Student Section -->
+  <section id="student-view" style="display:none;">
+    <h1>Student Dashboard</h1>
+    <label>Batch (branch): <input id="student-branch" placeholder="CSE"/></label>
+    <label>Section: <input id="student-section" placeholder="A"/></label>
+    <label>Enrollment ID: <input id="student-enroll" placeholder="e.g. CR-A or student ID"/></label>
+    <button id="search-student">Search</button>
+    <button id="cr-reschedule-btn" style="display:none; margin-top: 1rem;">Request Reschedule</button>
+    <div id="student-timetable"></div>
+  </section>
+
+  <!-- Reports & Analytics Section -->
+  <section id="reports-view" style="display:none;">
+    <h1>Reports & Analytics</h1>
+    <nav id="reports-tabs">
+      <button class="report-tab active" data-report="class">Class/Branch Reports</button>
+      <button class="report-tab" data-report="teacher">Teacher Reports</button>
+      <button class="report-tab" data-report="subject">Subject Reports</button>
+      <button class="report-tab" data-report="room">Room Reports</button>
+    </nav>
+
+    <div id="reports-filters" style="margin-bottom: 1rem;">
+      <label>Branch:
+        <select id="reports-branch-select"></select>
+      </label>
+      <label>Section:
+        <select id="reports-section-select"></select>
+      </label>
+      <button id="reports-generate-btn">Generate Report</button>
+      <button id="reports-export-csv" style="display:none;">Export CSV</button>
+    </div>
+
+    <div id="reports-content">
+      <p>Select report type and generate to see details here.</p>
+    </div>
+  </section>
+
+  <!-- Analytics Dashboard -->
+  <section id="analytics-view" style="display:none;">
+    <h1>Analytics Dashboard</h1>
+    <div style="margin-bottom:2rem;">
+      <label>Branch:
+        <select id="analytics-branch-select"></select>
+      </label>
+      <button id="analytics-generate-btn">Generate Analytics</button>
+    </div>
+    <div id="analytics-content" style="display:flex; flex-wrap:wrap; gap:2rem; justify-content:center;"></div>
+  </section>
+<!-- 
+   Timetable Approval Section -->
+  <section id="approval-view" style="display:none;">
+    <h1>Timetable Approval</h1>
+    <p>Timetable approval workflow and interface goes here.</p>
+  </section>
+</main> -->
+
+<script>
+/* --- Tab Navigation --- */
+const tabs = {
+  admin: 'admin-view',
+  faculty: 'faculty-view',
+  student: 'student-view',
+  reports: 'reports-view',
+  analytics: 'analytics-view',
+  approval: 'approval-view'
+};
+
+Object.keys(tabs).forEach(tab => {
+  document.getElementById('tab-' + tab).onclick = function() {
+    Object.values(tabs).forEach(id => document.getElementById(id).style.display = 'none');
+    document.getElementById(tabs[tab]).style.display = 'block';
+    Object.keys(tabs).forEach(t => document.getElementById('tab-' + t).classList.remove('active'));
+    this.classList.add('active');
+
+    // Special load for reports and analytics on tab open
+    if(tab === 'reports') {
+      initializeReportsFilters();
+      showSelectedReportTab('class');
+    }
+    if(tab === 'analytics') {
+      initializeAnalyticsFilters();
+      clearAnalyticsContent();
+    }
+  }
+});
+
+/* --- Global Timetable DB --- */
+let timetableDB = {}; // timetableDB[branch][section]: { year, cr, days, periods, schedule }
+
+/* --- Helpers --- */
+function parseCSVInput(text) {
+  return text.split(',').map(s => s.trim()).filter(Boolean);
+}
+function parseMultiLineInput(text) {
+  return text.split('\n').map(s => s.trim()).filter(Boolean);
+}
+
+/* --- Admin Timetable Creation --- */
+document.getElementById('timetable-form').onsubmit = e => {
+  e.preventDefault();
+  const year = document.getElementById('input-year').value.trim();
+  const branch = document.getElementById('branch-select').value.trim();
+  const sections = parseCSVInput(document.getElementById('input-sections').value);
+  const crs = parseCSVInput(document.getElementById('input-crs').value);
+  const subjectsLines = parseMultiLineInput(document.getElementById('input-subjects').value);
+  const rooms = parseCSVInput(document.getElementById('input-rooms').value);
+  const days = parseCSVInput(document.getElementById('input-days').value);
+  const periods = parseCSVInput(document.getElementById('input-periods').value);
+  if(!branch || !sections.length || !subjectsLines.length || !rooms.length || !days.length || !periods.length) {
+    alert("Please fill all inputs.");
+    return;
+  }
+  // Subject, faculty pairs
+  const subjects = subjectsLines.map(line=>{
+    const [subj, fac] = line.split(',').map(s=>s.trim());
+    return { subject: subj, faculty: fac };
+  });
+  timetableDB[branch] = timetableDB[branch] || {};
+  let roomIndex = 0, subjIndex = 0;
+  sections.forEach((section, idx) => {
+    timetableDB[branch][section] = {
+      year: year || '',
+      cr: crs[idx] || '',
+      days, periods, schedule: {}
+    };
+    let sched = timetableDB[branch][section].schedule;
+    days.forEach(day => {
+      sched[day] = [];
+      periods.forEach(() => {
+        const {subject, faculty} = subjects[subjIndex % subjects.length];
+        const room = rooms[roomIndex % rooms.length];
+        sched[day].push({subject, faculty, room});
+        subjIndex++; roomIndex++;
+      });
+    });
+  });
+  renderFullTimetable(branch);
+  document.getElementById('btn-export-csv').style.display = 'inline-block';
+  document.getElementById('btn-export-pdf').style.display = 'inline-block';
+};
+
+/* --- Render Admin Timetable --- */
+function renderFullTimetable(branch) {
+  const container = document.getElementById('timetable-container');
+  container.innerHTML = '';
+  if(!timetableDB[branch]) {
+    container.textContent = 'No timetable found for ' + branch;
+    return;
+  }
+  for(const section in timetableDB[branch]) {
+    const {year, cr, days, periods, schedule} = timetableDB[branch][section];
+    let extraInfo = '';
+    if(year) extraInfo += `Year: ${year} `;
+    if(cr) extraInfo += `| CR: ${cr}`;
+    let html = `<h2 class="tt-section">Section ${section} (${branch}) ${extraInfo}</h2>
+    <table class="tt-table"><thead><tr><th>Day / Period</th>`;
+    periods.forEach(p=> html += `<th>${p}</th>`);
+    html += '</tr></thead><tbody>';
+    days.forEach(day=> {
+      html += `<tr><th>${day}</th>` + schedule[day].map(sess=>`<td>
+        <div class="tt-subject">${sess.subject}</div>
+        <div class="tt-faculty">${sess.faculty}</div>
+        <div class="tt-room">${sess.room}</div>
+      </td>`).join('') + '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML += html;
+  }
+}
+
+/* Export buttons */
+document.getElementById('btn-export-csv').onclick = function() {
+  const container = document.getElementById('timetable-container');
+  const tables = container.getElementsByTagName('table');
+  if(!tables.length){ alert("Generate timetable first."); return;}
+  let csv = '';
+  Array.from(tables).forEach((table, index) => {
+    const title = table.previousElementSibling?.textContent || `Section ${index+1}`;
+    csv += title + '\n';
+    for(let row of table.rows){
+      let cells=[];
+      for(let cell of row.cells){
+        cells.push(`"${cell.textContent.trim().replace(/"/g,'""')}"`);
+      }
+      csv += cells.join(',')+'\n';
+    } csv+='\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `timetable_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+};
+document.getElementById('btn-export-pdf').onclick = function() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('landscape');
+  let y=10;
+  const container = document.getElementById('timetable-container');
+  const tables = container.getElementsByTagName('table');
+  if(!tables.length){alert("Generate timetable first."); return;}
+  doc.setFontSize(20); doc.text('Generated Timetable', 10, y); y += 12;
+  Array.from(tables).forEach((table, i) => {
+    let text = table.previousElementSibling?.textContent || `Section ${i+1}`;
+    doc.setFontSize(16); doc.text(text, 10, y); y += 10;
+    doc.setFontSize(12);
+    for(let row of table.rows){
+      let line = ''; for(let cell of row.cells){ line+=cell.textContent.trim()+"  "; }
+      doc.text(line, 10, y); y+=7; if(y>280){doc.addPage();y=10;}
+    } y+=12;
+  }); doc.save('timetable.pdf');
+};
+
+/* --- Faculty dashboard login and timetable display --- */
+document.getElementById('faculty-login-form').onsubmit = e => {
+  e.preventDefault();
+  const facultyName = document.getElementById('faculty-login-name').value.trim().toLowerCase();
+  const container = document.getElementById('faculty-timetable-container');
+  container.innerHTML = '';
+  if(!facultyName){
+    container.textContent = 'Please enter your faculty name.';
+    return;
+  }
+  let matches = [];
+  for(let branch in timetableDB){
+    for(let section in timetableDB[branch]){
+      let {days, periods, schedule} = timetableDB[branch][section];
+      for(let day in schedule){
+        schedule[day].forEach((sess, idx)=>{
+          if(sess.faculty.toLowerCase()===facultyName){
+            matches.push({branch, section, day, period: periods[idx], ...sess});
+          }
+        });
+      }
+    }
+  }
+  if(!matches.length){
+    container.textContent = `No classes found for "${facultyName}".`;
+    return;
+  }
+  let html = `<h2>Timetable for ${facultyName}</h2>
+    <table class="tt-table"><thead><tr><th>Branch</th><th>Section</th><th>Day</th><th>Period</th><th>Subject</th><th>Room</th></tr></thead><tbody>`;
+  matches.forEach(m => {
+    html += `<tr><td>${m.branch}</td><td>${m.section}</td><td>${m.day}</td><td>${m.period}</td><td>${m.subject}</td><td>${m.room}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+};
+
+/* --- Student dashboard timetable display --- */
+document.getElementById('search-student').onclick = function(){
+  const branch = document.getElementById('student-branch').value.trim();
+  const section = document.getElementById('student-section').value.trim();
+  const enroll = document.getElementById('student-enroll').value.trim();
+  const container = document.getElementById('student-timetable');
+  container.innerHTML = '';
+  if(!branch || !section) { container.textContent = 'Enter branch and section.'; return;}
+  if(!timetableDB[branch] || !timetableDB[branch][section]) {
+    container.textContent = 'No timetable found for '+branch+' section '+section; return;
+  }
+  const {year, cr, days, periods, schedule} = timetableDB[branch][section];
+
+  const isCR = enroll.toUpperCase() === (cr?.toUpperCase());
+  if(isCR) {
+    document.getElementById('cr-reschedule-btn').style.display = 'inline-block';
+  } else {
+    document.getElementById('cr-reschedule-btn').style.display = 'none';
+  }
+
+  let html = '';
+  if(isCR){
+    html += `<div class="cr-highlight">Class Representative</div>`;
+  }
+  html += `<table class="tt-table"><thead><tr><th>Day / Period</th>`;
+  periods.forEach(p=>html+= `<th>${p}</th>`);
+  html+='</tr></thead><tbody>';
+  days.forEach(day=>{
+    html+=`<tr><th>${day}</th>` +
+      schedule[day].map(sess=>{
+        return `<td>
+          <div class="tt-subject">${sess.subject}</div>
+          <div class="tt-faculty">${sess.faculty}</div>
+          <div class="tt-room">${sess.room}</div>
+        </td>`;
+      }).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+};
+
+/* --- CR Reschedule button --- */
+document.getElementById('cr-reschedule-btn').onclick = function() {
+  alert('CR Rescheduling modal/dialogue/feature triggered (to be integrated with backend workflow)');
+};
+
+/* --- Reports & Analytics Section --- */
+
+const reportsTabs = document.querySelectorAll('#reports-tabs button');
+let activeReportTab = 'class';
+
+reportsTabs.forEach(btn => {
+  btn.onclick = function() {
+    reportsTabs.forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const reportType = this.dataset.report;
+    activeReportTab = reportType;
+    showSelectedReportTab(reportType);
+  }
+});
+
+function initializeReportsFilters() {
+  const branchSelect = document.getElementById('reports-branch-select');
+  const sectionSelect = document.getElementById('reports-section-select');
+  // Populate branches
+  branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+  Object.keys(timetableDB).forEach(branch => {
+    branchSelect.innerHTML += `<option value="${branch}">${branch}</option>`;
+  });
+  // Reset sections
+  sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+
+  branchSelect.onchange = function() {
+    const selectedBranch = this.value;
+    sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+    if(timetableDB[selectedBranch]) {
+      Object.keys(timetableDB[selectedBranch]).forEach(sec => {
+        sectionSelect.innerHTML += `<option value="${sec}">${sec}</option>`;
+      });
+    }
+  }
+}
+
+document.getElementById('reports-generate-btn').onclick = function() {
+  generateReport(activeReportTab);
+  document.getElementById('reports-export-csv').style.display = 'inline-block';
+}
+
+/* CSV Export for reports */
+document.getElementById('reports-export-csv').onclick = function(){
+  const container = document.getElementById('reports-content');
+  if(!container.innerText.trim()){
+    alert("No report to export.");
+    return;
+  }
+  // Simple CSV extraction of visible tables
+  let csv = '';
+  const tables = container.querySelectorAll('table');
+  if(!tables.length) {
+    alert("No tabular data in report to export.");
+    return;
+  }
+  tables.forEach(table => {
+    for(let row of table.rows) {
+      let cells = [];
+      for(let cell of row.cells){
+        cells.push('"' + cell.textContent.trim().replace(/"/g, '""') + '"');
+      }
+      csv += cells.join(',') + '\n';
+    }
+    csv += '\n';
+  });
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; 
+  a.download = `report_${activeReportTab}_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+function showSelectedReportTab(reportType) {
+  const container = document.getElementById('reports-content');
+  container.innerHTML = `<p>Select branch and section, then click "Generate Report" to view the ${reportType} report.</p>`;
+}
+
+/* Function: Generate reports by type */
+function generateReport(type){
+  const branch = document.getElementById('reports-branch-select').value;
+  const section = document.getElementById('reports-section-select').value;
+  const container = document.getElementById('reports-content');
+  container.innerHTML = '';
+
+  if(!branch) {
+    container.innerHTML = '<p>Please select a branch.</p>';
+    return;
+  }
+  if(type !== 'teacher' && !section) {
+    container.innerHTML = '<p>Please select a section.</p>';
+    return;
+  }
+
+  switch(type){
+    case 'class': generateClassReport(branch, section); break;
+    case 'teacher': generateTeacherReport(branch); break;
+    case 'subject': generateSubjectReport(branch); break;
+    case 'room': generateRoomReport(branch); break;
+    default:
+      container.innerHTML = `<p>Unknown report type: ${type}</p>`;
+  }
+}
+
+/* CLASS/BRANCH REPORT: Timetable, periods per subject, room allocation */
+function generateClassReport(branch, section){
+  const container = document.getElementById('reports-content');
+  if(!section){
+    container.innerHTML = '<p>Please select a section.</p>';
+    return;
+  }
+  if(!timetableDB[branch] || !timetableDB[branch][section]) {
+    container.innerHTML = `<p>No data for ${branch} section ${section}</p>`;
+    return;
+  }
+
+  const {days, periods, schedule} = timetableDB[branch][section];
+
+  // Period counts per subject
+  const subjCount = {};
+  days.forEach(day => {
+    schedule[day].forEach(sess => {
+      subjCount[sess.subject] = (subjCount[sess.subject] || 0) + 1;
+    });
+  });
+
+  // Room allocation count
+  const roomCount = {};
+  days.forEach(day => {
+    schedule[day].forEach(sess => {
+      roomCount[sess.room] = (roomCount[sess.room] || 0) + 1;
+    });
+  });
+
+  let html = `<h2>Timetable for ${branch} Section ${section}</h2>`;
+  html += `<table class="tt-table"><thead><tr><th>Day / Period</th>`;
+  periods.forEach(p=>html+= `<th>${p}</th>`);
+  html += `</tr></thead><tbody>`;
+  days.forEach(day => {
+    html += `<tr><th>${day}</th>`;
+    schedule[day].forEach(sess => {
+      html += `<td><strong>${sess.subject}</strong><br>${sess.room}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Subject count summary
+  html += `<h3>Number of periods per subject</h3><table class="tt-table"><thead><tr><th>Subject</th><th>Periods</th></tr></thead><tbody>`;
+  Object.entries(subjCount).forEach(([subj, count]) => {
+    html += `<tr><td>${subj}</td><td>${count}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+
+  // Room allocation summary
+  html += `<h3>Room Allocation Summary</h3><table class="tt-table"><thead><tr><th>Room</th><th>Periods Occupied</th></tr></thead><tbody>`;
+  Object.entries(roomCount).forEach(([room, count]) => {
+    html += `<tr><td>${room}</td><td>${count}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+
+  container.innerHTML = html;
+}
+
+/* TEACHER REPORT: Timetable per teacher, workload, free periods */
+function generateTeacherReport(branch){
+  const container = document.getElementById('reports-content');
+  if(!branch){
+    container.innerHTML = '<p>Please select a branch.</p>';
+    return;
+  }
+  if(!timetableDB[branch]){
+    container.innerHTML = `<p>No data for branch ${branch}</p>`;
+    return;
+  }
+  // Aggregate teacher data: timetable and workload
+  const teacherData = {};
+
+  const branchData = timetableDB[branch];
+  for(const section in branchData){
+    const {days, periods, schedule} = branchData[section];
+
+    for(let day of days){
+      schedule[day].forEach((sess, idx) => {
+        if(!teacherData[sess.faculty]) teacherData[sess.faculty] = {classes: [], workload: 0};
+        teacherData[sess.faculty].classes.push({
+          section, day, period: periods[idx], subject: sess.subject, room: sess.room
+        });
+        teacherData[sess.faculty].workload++;
+      });
+    }
+  }
+
+  let html = `<h2>Teacher Timetable & Workload - Branch ${branch}</h2>`;
+  html += `<table class="tt-table"><thead><tr><th>Teacher</th><th>Number of Periods (Week)</th><th>Class Timetable</th></tr></thead><tbody>`;
+
+  Object.entries(teacherData).forEach(([teacher, data]) => {
+    const classesHtml = data.classes.map(c => `${c.day} ${c.period} (${c.section}): ${c.subject} @${c.room}`).join('<br>');
+    html += `<tr><td>${teacher}</td><td>${data.workload}</td><td>${classesHtml}</td></tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+/* SUBJECT REPORT: Subject distribution and teachers */
+function generateSubjectReport(branch){
+  const container = document.getElementById('reports-content');
+  if(!branch){
+    container.innerHTML = '<p>Please select a branch.</p>';
+    return;
+  }
+  if(!timetableDB[branch]){
+    container.innerHTML = `<p>No data for branch ${branch}</p>`;
+    return;
+  }
+  const subjectData = {};
+  const branchData = timetableDB[branch];
+  for(const section in branchData){
+    const {days, schedule} = branchData[section];
+    for(let day of days){
+      schedule[day].forEach(sess => {
+        if(!subjectData[sess.subject]) subjectData[sess.subject] = {count:0, teachers:new Set()};
+        subjectData[sess.subject].count++;
+        subjectData[sess.subject].teachers.add(sess.faculty);
+      });
+    }
+  }
+
+  let html = `<h2>Subject Distribution - Branch ${branch}</h2>`;
+  html += `<table class="tt-table"><thead><tr><th>Subject</th><th>Periods per Week</th><th>Teachers</th></tr></thead><tbody>`;
+
+  Object.entries(subjectData).forEach(([subject, data]) => {
+    html += `<tr><td>${subject}</td><td>${data.count}</td><td>${[...data.teachers].join(', ')}</td></tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+/* ROOM REPORT: Room usage, conflicts */
+function generateRoomReport(branch){
+  const container = document.getElementById('reports-content');
+  if(!branch){
+    container.innerHTML = '<p>Please select a branch.</p>';
+    return;
+  }
+  if(!timetableDB[branch]){
+    container.innerHTML = `<p>No data for branch ${branch}</p>`;
+    return;
+  }
+
+  const roomUsage = {};
+  const conflicts = [];
+  const branchData = timetableDB[branch];
+
+  for(const section in branchData){
+    const {days, periods, schedule} = branchData[section];
+
+    days.forEach(day => {
+      let periodRoomMap = {};
+      schedule[day].forEach((sess, idx) => {
+        const key = `${day}-${periods[idx]}`;
+        if(!roomUsage[sess.room]) roomUsage[sess.room] = 0;
+        roomUsage[sess.room]++;
+
+        // Check conflicts
+        if(!periodRoomMap[sess.room]) periodRoomMap[sess.room] = [];
+        periodRoomMap[sess.room].push({section, subject: sess.subject});
+      });
+
+      Object.entries(periodRoomMap).forEach(([room, bookings]) => {
+        if(bookings.length > 1) {
+          conflicts.push({room, day, details: bookings});
+        }
+      });
+    });
+  }
+
+  let html = `<h2>Room Usage Summary - Branch ${branch}</h2>`;
+  html += `<table class="tt-table"><thead><tr><th>Room</th><th>Periods Occupied</th></tr></thead><tbody>`;
+  Object.entries(roomUsage).forEach(([room, count]) => {
+    html += `<tr><td>${room}</td><td>${count}</td></tr>`;
+  });
+  html += `</tbody></table>`;
+
+  html += `<h2>Conflicts / Double Booked Rooms</h2>`;
+  if(conflicts.length === 0) {
+    html += `<p>No conflicts detected.</p>`;
+  } else {
+    html += `<table class="tt-table"><thead><tr><th>Room</th><th>Day</th><th>Details</th></tr></thead><tbody>`;
+    conflicts.forEach(c => {
+      const detailStr = c.details.map(d => `${d.section} (${d.subject})`).join('; ');
+      html += `<tr><td>${c.room}</td><td>${c.day}</td><td>${detailStr}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+
+  container.innerHTML = html;
+}
+
+
+/* --- Analytics Section --- */
+
+function initializeAnalyticsFilters() {
+  const analyticsBranchSelect = document.getElementById('analytics-branch-select');
+  analyticsBranchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+  Object.keys(timetableDB).forEach(branch => {
+    analyticsBranchSelect.innerHTML += `<option value="${branch}">${branch}</option>`;
+  });
+}
+
+function clearAnalyticsContent() {
+  document.getElementById('analytics-content').innerHTML = '<p>Select branch and click "Generate Analytics".</p>';
+}
+
+document.getElementById('analytics-generate-btn').onclick = () => {
+  const branch = document.getElementById('analytics-branch-select').value;
+  if(!branch) {
+    alert('Please select a branch.');
+    return;
+  }
+  generateAnalytics(branch);
+};
+
+/* Generate analytics charts and summaries */
+function generateAnalytics(branch){
+  const analyticsDiv = document.getElementById('analytics-content');
+  analyticsDiv.innerHTML = '';
+
+  const branchData = timetableDB[branch];
+  if(!branchData) {
+    analyticsDiv.innerHTML = `<p>No data for branch ${branch}</p>`;
+    return;
+  }
+
+  // Teacher workload
+  let teacherWorkload = {};
+  // Subject distribution
+  let subjectDist = {};
+  // Room usage heatmap data: {room: {day-period count}}
+  let roomUsage = {};
+  const daysSet = new Set();
+  const periodsSet = new Set();
+
+  for(let section in branchData){
+    const {days, periods, schedule} = branchData[section];
+    days.forEach(day => daysSet.add(day));
+    periods.forEach(p => periodsSet.add(p));
+    
+    days.forEach(day => {
+      schedule[day].forEach((sess, idx) => {
+        teacherWorkload[sess.faculty] = (teacherWorkload[sess.faculty] || 0) + 1;
+        subjectDist[sess.subject] = (subjectDist[sess.subject] || 0) + 1;
+
+        if(!roomUsage[sess.room]) roomUsage[sess.room] = {};
+        const key = `${day} ${periods[idx]}`;
+        roomUsage[sess.room][key] = (roomUsage[sess.room][key] || 0) + 1;
+      });
+    });
+  }
+
+  /* Create charts */
+
+  // Teacher workload pie chart
+  const teacherLabels = Object.keys(teacherWorkload);
+  const teacherData = Object.values(teacherWorkload);
+
+  const teacherChartCanvas = document.createElement('canvas');
+  teacherChartCanvas.style.maxWidth = '450px';
+  analyticsDiv.appendChild(document.createElement('hr'));
+  analyticsDiv.appendChild(document.createElement('h3')).textContent = 'Teacher Workload Distribution';
+  analyticsDiv.appendChild(teacherChartCanvas);
+
+  new Chart(teacherChartCanvas.getContext('2d'), {
+    type: 'pie',
+    data: {
+      labels: teacherLabels,
+      datasets: [{
+        data: teacherData,
+        backgroundColor: teacherLabels.map(_=>randomColor()),
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {position: 'right'},
+        title: {display: false}
+      }
+    }
+  });
+
+  // Subject distribution bar chart
+  const subjectLabels = Object.keys(subjectDist);
+  const subjectData = Object.values(subjectDist);
+
+  const subjectChartCanvas = document.createElement('canvas');
+  subjectChartCanvas.style.maxWidth = '600px';
+  analyticsDiv.appendChild(document.createElement('hr'));
+  analyticsDiv.appendChild(document.createElement('h3')).textContent = 'Subject Distribution (Periods per Week)';
+  analyticsDiv.appendChild(subjectChartCanvas);
+
+  new Chart(subjectChartCanvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: subjectLabels,
+      datasets: [{
+        label: 'Periods',
+        data: subjectData,
+        backgroundColor: 'rgba(242, 109, 132, 0.8)',
+        borderColor: 'rgba(178, 24, 61, 1)',
+        borderWidth: 1,
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {beginAtZero: true, stepSize: 1}
+      }
+    }
+  });
+
+  // Optional: Room usage heatmap (simplified as table here)
+  analyticsDiv.appendChild(document.createElement('hr'));
+  const heatmapTitle = document.createElement('h3');
+  heatmapTitle.textContent = 'Room Usage Heatmap (counts per day-period)';
+  analyticsDiv.appendChild(heatmapTitle);
+
+  const heatmapTable = document.createElement('table');
+  heatmapTable.className = 'tt-table';
+
+  const daysArr = Array.from(daysSet);
+  const periodsArr = Array.from(periodsSet);
+
+  // Table head
+  const thead = heatmapTable.createTHead();
+  let headRow = thead.insertRow();
+  headRow.insertCell().textContent = 'Room / Period';
+  periodsArr.forEach(p => {
+    headRow.insertCell().textContent = p;
+  });
+
+  // Table body
+  const tbody = heatmapTable.createTBody();
+  Object.entries(roomUsage).forEach(([room, usage])=>{
+    daysArr.forEach(day=>{
+      let row = tbody.insertRow();
+      if(day === daysArr[0]){
+        // room cell with rowspan
+        let roomCell = row.insertCell();
+        roomCell.textContent = room;
+        roomCell.rowSpan = daysArr.length;
+      }
+      else {
+        row.insertCell(); // empty cell for subsequent day rows
+      }
+      row.insertCell().textContent = day;
+
+      periodsArr.forEach(p => {
+        let key = `${day} ${p}`;
+        let count = usage[key] || 0;
+        let cell = row.insertCell();
+        cell.textContent = count;
+        if(count > 0) {
+          cell.style.backgroundColor = '#ffd464aa';
+        }
+      });
+    });
+  });
+  analyticsDiv.appendChild(heatmapTable);
+}
+
+/* Utility - generate random pastel color */
+function randomColor() {
+  const r = Math.floor(200 + Math.random()*55);
+  const g = Math.floor(100 + Math.random()*155);
+  const b = Math.floor(100 + Math.random()*155);
+  return `rgb(${r},${g},${b})`;
+}
+
+/* --- Reports Section Initialization & Display Helpers --- */
+
+function showSelectedReportTab(reportType) {
+  const container = document.getElementById('reports-content');
+  container.innerHTML = `<p>Select branch and section, then click "Generate Report" to view the ${reportType} report.</p>`;
+}
+
+function initializeReportsFilters() {
+  const branchSelect = document.getElementById('reports-branch-select');
+  const sectionSelect = document.getElementById('reports-section-select');
+  branchSelect.innerHTML = '<option value="">-- Select Branch --</option>';
+  Object.keys(timetableDB).forEach(branch => {
+    branchSelect.innerHTML += `<option value="${branch}">${branch}</option>`;
+  });
+  sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+
+  branchSelect.onchange = function() {
+    const selectedBranch = this.value;
+    sectionSelect.innerHTML = '<option value="">-- Select Section --</option>';
+    if(timetableDB[selectedBranch]) {
+      Object.keys(timetableDB[selectedBranch]).forEach(sec => {
+        sectionSelect.innerHTML += `<option value="${sec}">${sec}</option>`;
+      });
+    }
+  }
+}
+
+/* --- End of Script --- */
+</script>
+</body>
+</html>
