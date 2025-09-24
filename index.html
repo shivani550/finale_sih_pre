@@ -334,6 +334,15 @@ nav#reports-tabs button.active {
     <div id="faculty-timetable-container"></div>
   </section>
 
+  <!-- Faculty AI Assistant Chat Box -->
+<div id="faculty-ai-container" style="display:none;">
+  <div style="margin:1.5rem 0 0.5rem 0; font-weight:600;">AI Assistant</div>
+  <div id="faculty-ai-log" style="background:#fff1e8;border-radius:10px;padding:0.6rem 0.9rem;margin-bottom:0.5rem;min-height:52px;max-height:100px;overflow:auto;"></div>
+  <div style="display:flex;gap:0.5rem;">
+    <input type="text" id="faculty-ai-input" placeholder="Ask about your classes..." style="flex:1;border-radius:8px;border:1.2px solid #b0183d;padding:0.5rem;">
+    <button id="faculty-ai-send" style="border-radius:8px;padding:0.6rem 1.2rem;background:#ff5e5e;color:#fff;font-weight:700;border:none;">Send</button>
+  </div>
+</div>
   <!-- Student Section -->
   <section id="student-view" style="display:none;">
     <h1>Student Dashboard</h1>
@@ -344,6 +353,16 @@ nav#reports-tabs button.active {
     <button id="cr-reschedule-btn" style="display:none; margin-top: 1rem;">Request Reschedule</button>
     <div id="student-timetable"></div>
   </section>
+
+  <!-- Student AI Assistant Chat Box -->
+<div id="student-ai-container" style="display:none;">
+  <div style="margin:1.5rem 0 0.5rem 0; font-weight:600;">AI Assistant</div>
+  <div id="student-ai-log" style="background:#fff1e8;border-radius:10px;padding:0.6rem 0.9rem;margin-bottom:0.5rem;min-height:52px;max-height:100px;overflow:auto;"></div>
+  <div style="display:flex;gap:0.5rem;">
+    <input type="text" id="student-ai-input" placeholder="Ask about your classes..." style="flex:1;border-radius:8px;border:1.2px solid #b0183d;padding:0.5rem;">
+    <button id="student-ai-send" style="border-radius:8px;padding:0.6rem 1.2rem;background:#ff5e5e;color:#fff;font-weight:700;border:none;">Send</button>
+  </div>
+</div>
 
   <!-- Reports & Analytics Section -->
   <section id="reports-view" style="display:none;">
@@ -1136,6 +1155,182 @@ function initializeReportsFilters() {
     }
   }
 }
+// === Faculty AI Assistant ===
+function showFacultyAI(facultyName, classes) {
+  document.getElementById('faculty-ai-container').style.display = 'block';
+  const log = document.getElementById('faculty-ai-log');
+  log.innerHTML = '';
+  document.getElementById('faculty-ai-send').onclick = function() {
+    const input = document.getElementById('faculty-ai-input');
+    const query = input.value.trim().toLowerCase();
+    if(!query) return;
+    log.innerHTML += `<div><b>You:</b> ${input.value}</div>`;
+    let reply = facultyAISmartReply(query, classes);
+    log.innerHTML += `<div><b>AI:</b> ${reply}</div>`;
+    input.value = '';
+    log.scrollTop = log.scrollHeight;
+  };
+}
+
+function facultyAISmartReply(q, classes) {
+  if(!classes.length) return "You have no classes scheduled.";
+  const now = new Date();
+  // Map `classes` to {day, period, subject, room}
+  const daysOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  // Sort classes by weekday+period
+  let sorted = classes.slice().sort((a,b)=>{
+    let d1 = daysOrder.indexOf(a.day), d2 = daysOrder.indexOf(b.day);
+    if (d1!==d2) return d1 - d2;
+    return a.period.localeCompare(b.period);
+  });
+  // Question patterns
+  if(q.includes('how many class')) return `You have ${classes.length} classes.`;
+  if(q.includes('next class')) {
+    let msg = "Your next class: ";
+    for(let c of sorted) {
+      // This demo assumes periods like "10:00-11:00"
+      let periodStart = c.period.split('-')[0];
+      let classDate = new Date();
+      classDate.setHours(...periodStart.split(':').map(Number),0,0);
+      // Could use actual dates in prod; here, just show first class.
+      return `${c.subject} on ${c.day} at ${c.period} in Room ${c.room}`;
+    }
+  }
+  if(q.includes('when is my class') || q.includes('what is my class')) {
+    return `Your next class: ${sorted[0].subject} on ${sorted[0].day} at ${sorted[0].period} in Room ${sorted[0].room}.`;
+  }
+  return "Try asking about your next class or workload!";
+}
+
+// === Student AI Assistant ===
+function showStudentAI(branch, section, schedule, periods, days) {
+  document.getElementById('student-ai-container').style.display = 'block';
+  const log = document.getElementById('student-ai-log');
+  log.innerHTML = '';
+  document.getElementById('student-ai-send').onclick = function() {
+    const input = document.getElementById('student-ai-input');
+    const query = input.value.trim().toLowerCase();
+    if(!query) return;
+    log.innerHTML += `<div><b>You:</b> ${input.value}</div>`;
+    let reply = studentAISmartReply(query, schedule, periods, days);
+    log.innerHTML += `<div><b>AI:</b> ${reply}</div>`;
+    input.value = '';
+    log.scrollTop = log.scrollHeight;
+  };
+}
+function studentAISmartReply(q, schedule, periods, days){
+  // Flatten all timetable entries
+  let allClasses = [];
+  days.forEach(day=>{
+    schedule[day].forEach((sess, idx)=>{
+      allClasses.push({day, period:periods[idx], ...sess});
+    });
+  });
+  // Sort by day/period
+  const daysOrder = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  let sorted = allClasses.slice().sort((a,b)=>{
+    let d1 = daysOrder.indexOf(a.day), d2 = daysOrder.indexOf(b.day);
+    if (d1!==d2) return d1 - d2;
+    return a.period.localeCompare(b.period);
+  });
+
+  if(q.includes('how many class')) return `You have ${allClasses.length} classes this week.`;
+  if(q.includes('next class')) {
+    let nxt = sorted[0];
+    return `Your next class: ${nxt.subject} with ${nxt.faculty} on ${nxt.day} at ${nxt.period} in Room ${nxt.room}.`;
+  }
+  if(q.includes('when is my class') || q.includes('what is my class')) {
+    let nxt = sorted[0];
+    return `Your next class is ${nxt.subject} with ${nxt.faculty} on ${nxt.day} at ${nxt.period} in Room ${nxt.room}.`;
+  }
+  return "I can answer questions like: 'when is my next class', 'how many classes this week'!";
+}
+
+// -- Connect AI assistants into your dashboard rendering --
+
+// After rendering faculty timetable:
+document.getElementById('faculty-login-form').onsubmit = e => {
+  e.preventDefault();
+  const facultyName = document.getElementById('faculty-login-name').value.trim().toLowerCase();
+  const container = document.getElementById('faculty-timetable-container');
+  container.innerHTML = '';
+  document.getElementById('faculty-ai-container').style.display = 'none';
+
+  if(!facultyName){ container.textContent = 'Please enter your faculty name.'; return;}
+  let matches = [];
+  for(let branch in timetableDB){
+    for(let section in timetableDB[branch]){
+      let {days, periods, schedule} = timetableDB[branch][section];
+      for(let day in schedule){
+        schedule[day].forEach((sess, idx)=>{
+          if(sess.faculty.toLowerCase()===facultyName){
+            matches.push({branch, section, day, period: periods[idx], ...sess});
+          }
+        });
+      }
+    }
+  }
+  if(!matches.length){
+    container.textContent = `No classes found for "${facultyName}".`;
+    return;
+  }
+  let html = `<h2>Timetable for ${facultyName}</h2>
+    <table class="tt-table"><thead><tr><th>Branch</th><th>Section</th><th>Day</th><th>Period</th><th>Subject</th><th>Room</th></tr></thead><tbody>`;
+  matches.forEach(m => {
+    html += `<tr><td>${m.branch}</td><td>${m.section}</td><td>${m.day}</td><td>${m.period}</td><td>${m.subject}</td><td>${m.room}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // Show AI
+  showFacultyAI(facultyName, matches);
+};
+
+// After rendering student timetable:
+document.getElementById('search-student').onclick = function(){
+  const branch = document.getElementById('student-branch').value.trim();
+  const section = document.getElementById('student-section').value.trim();
+  const enroll = document.getElementById('student-enroll').value.trim();
+  const container = document.getElementById('student-timetable');
+  container.innerHTML = '';
+  document.getElementById('student-ai-container').style.display = 'none';
+
+  if(!branch || !section) { container.textContent = 'Enter branch and section.'; return;}
+  if(!timetableDB[branch] || !timetableDB[branch][section]) {
+    container.textContent = 'No timetable found for '+branch+' section '+section; return;
+  }
+  const {year, cr, days, periods, schedule} = timetableDB[branch][section];
+  const isCR = enroll.toUpperCase() === (cr?.toUpperCase());
+  if(isCR) {
+    document.getElementById('cr-reschedule-btn').style.display = 'inline-block';
+  } else {
+    document.getElementById('cr-reschedule-btn').style.display = 'none';
+  }
+
+  let html = '';
+  if(isCR){
+    html += `<div class="cr-highlight">Class Representative</div>`;
+  }
+  html += `<table class="tt-table"><thead><tr><th>Day / Period</th>`;
+  periods.forEach(p=>html+= `<th>${p}</th>`);
+  html+='</tr></thead><tbody>';
+  days.forEach(day=>{
+    html+=`<tr><th>${day}</th>` +
+      schedule[day].map(sess=>{
+        return `<td>
+          <div class="tt-subject">${sess.subject}</div>
+          <div class="tt-faculty">${sess.faculty}</div>
+          <div class="tt-room">${sess.room}</div>
+        </td>`;
+      }).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  container.innerHTML = html;
+
+  // Show AI
+  showStudentAI(branch, section, schedule, periods, days);
+};
+
 
 /* --- End of Script --- */
 </script>
